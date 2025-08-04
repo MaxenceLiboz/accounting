@@ -1,5 +1,5 @@
 // Configuration
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxkaAAPC-P1c9vl3WvfjFU54EDFobQC9imGzm2DfU7ln19cNuFVInAxoIUGpIRxIvNaJA/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw_BgEjLWJuk1Sk31fl_7jpcdZwUf8eqwEdiy8cHy2V9kXNBkRVMXPVr2k6TCbCITWOtw/exec';
 let USER_ID_TOKEN = null; // Global variable to store the user's login token
 
 // Element Selectors
@@ -40,13 +40,13 @@ function handleFormSubmit(e) {
     const formData = {
         date: document.getElementById('date').value,
         invoiceNumber: document.getElementById('invoiceNumber').value,
-        prestationName: prestationSelect.value
+        prestationName: prestationSelect.value,
+        token: USER_ID_TOKEN
     };
     fetch(WEB_APP_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'text/plain;charset=utf-8',
-            'Authorization': `Bearer ${USER_ID_TOKEN}` // The security token is added here!
         },
         body: JSON.stringify(formData),
         redirect: 'follow'
@@ -61,7 +61,10 @@ function handleFormSubmit(e) {
             handleError(res.message); // Show specific error from backend
         }
     })
-    .catch(error => handleError('An error occurred while saving.'))
+.catch(error => {
+    console.log('ERROR', error);
+    handleError('An error occurred while saving.')
+})
     .finally(() => {
         submitButton.disabled = false;
         submitButton.textContent = 'Save Transaction';
