@@ -1,6 +1,6 @@
 // Configuration
 const WEB_APP_URL =
-  "https://script.google.com/macros/s/AKfycby3Pp9nJmTUa4pg_8q_4AD2IXqjw4BuAXsT44467_kXYBZsYKQU-AG2g2l3S56ISl9ZgQ/exec";
+  "https://script.google.com/macros/s/AKfycbwn880As5Q_ACcfk1Qu7T_OOoqXipCzhb4TCsZwP0yRF-WBcqUAH7Fb-rYPMd8q-xVLxw/exec";
 let USER_ID_TOKEN = null; // Global variable to store the user's login token
 let PRESTATIONS_DATA = []; // Pour stocker les données des prestations
 let SELECTED_PRESTATIONS = []; // Pour stocker la liste des prestations choisies
