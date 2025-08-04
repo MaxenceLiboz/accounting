@@ -1,122 +1,211 @@
 // Configuration
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw_BgEjLWJuk1Sk31fl_7jpcdZwUf8eqwEdiy8cHy2V9kXNBkRVMXPVr2k6TCbCITWOtw/exec';
+const WEB_APP_URL =
+  "https://script.google.com/macros/s/AKfycby3Pp9nJmTUa4pg_8q_4AD2IXqjw4BuAXsT44467_kXYBZsYKQU-AG2g2l3S56ISl9ZgQ/exec";
 let USER_ID_TOKEN = null; // Global variable to store the user's login token
+let PRESTATIONS_DATA = []; // Pour stocker les données des prestations
+let SELECTED_PRESTATIONS = []; // Pour stocker la liste des prestations choisies
 
-// Element Selectors
-const authContainer = document.getElementById('auth-container');
-const form = document.getElementById('accountingForm');
-const prestationSelect = document.getElementById('prestation');
-const submitButton = document.getElementById('submitButton');
-const statusMessage = document.getElementById('statusMessage');
+// Sélecteurs d'éléments
+const authContainer = document.getElementById("auth-container");
+const form = document.getElementById("accountingForm");
+const prestationSelect = document.getElementById("prestation");
+const addButton = document.getElementById("addButton");
+const prestationListDiv = document.getElementById("prestationList");
+const submitButton = document.getElementById("submitButton");
+const statusMessage = document.getElementById("statusMessage");
 
-/**
- * This function is automatically called by the Google Sign-In library after a successful login.
- * @param {Object} response - The response object from Google containing the user's credential.
- */
+// --- Logique d'Authentification (inchangée) ---
 function handleCredentialResponse(response) {
-    USER_ID_TOKEN = response.credential; // Store the secure token
-    
-    // Hide the login prompt and show the main application form
-    authContainer.style.display = 'none';
-    form.style.display = 'block';
-    
-    // Now that the user is authenticated, we can fetch the data
-    fetchPrestations();
-    setDefaultDate();
+  USER_ID_TOKEN = response.credential;
+  authContainer.style.display = "none";
+  form.style.display = "block";
+  fetchPrestations();
+  setDefaultDate();
 }
 
 /**
- * Handles the form submission, now including the security token.
+ * Ajoute la prestation sélectionnée dans la liste déroulante à notre liste temporaire.
+ */
+function addPrestationToList() {
+  const selectedName = prestationSelect.value;
+  if (!selectedName) {
+    handleError("Veuillez d'abord sélectionner une prestation.");
+    return;
+  }
+  const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+  if (!paymentMethod) {
+    // Juste au cas où
+    handleError("Veuillez sélectionner un mode de règlement.");
+    return;
+  }
+
+  const prestationData = PRESTATIONS_DATA.find((p) => p.name === selectedName);
+
+  if (prestationData) {
+    // Ajouter un nouvel objet à la liste, incluant le mode de paiement
+    SELECTED_PRESTATIONS.push({
+      ...prestationData, // Copie les clés : name, earning, cost
+      paymentMethod: paymentMethod.value, // Ajoute la nouvelle clé
+    });
+    renderSelectedList();
+  }
+
+  prestationSelect.selectedIndex = 0;
+}
+/**
+ * Affiche la liste des prestations sélectionnées dans la div.
+ */
+function renderSelectedList() {
+  prestationListDiv.innerHTML = "";
+
+  if (SELECTED_PRESTATIONS.length === 0) {
+    prestationListDiv.innerHTML = '<p style="color: #888; text-align: center;">Aucune prestation ajoutée.</p>';
+    return;
+  }
+
+  SELECTED_PRESTATIONS.forEach((prestation, index) => {
+    const itemDiv = document.createElement("div");
+    // --- NOUVEAU DESIGN AMÉLIORÉ ---
+    itemDiv.style.cssText = `
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8em;
+            margin-bottom: 0.5em;
+            background-color: #f9f9f9;
+            border-left: 5px solid #007bff;
+            border-radius: 4px;
+        `;
+
+    const detailsSpan = document.createElement("span");
+    detailsSpan.innerHTML = `
+            <strong style="display: block; color: #333;">${prestation.name}</strong>
+            <small style="color: #666;">Payé par : ${prestation.paymentMethod} - Montant : €${prestation.earning}</small>
+        `;
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.innerHTML = "×";
+    removeButton.dataset.index = index;
+    removeButton.style.cssText = `
+            color: red;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.5em;
+            line-height: 1;
+        `;
+
+    itemDiv.appendChild(detailsSpan);
+    itemDiv.appendChild(removeButton);
+    prestationListDiv.appendChild(itemDiv);
+  });
+
+  document.querySelectorAll(".remove-btn").forEach((button) => {
+    button.addEventListener("click", (e) => {
+      const indexToRemove = parseInt(e.target.dataset.index);
+      SELECTED_PRESTATIONS.splice(indexToRemove, 1);
+      renderSelectedList();
+    });
+  });
+}
+
+/**
+ * Gère la soumission du formulaire principal.
  */
 function handleFormSubmit(e) {
-    e.preventDefault();
-    if (!USER_ID_TOKEN) {
-        handleError("You must be signed in to save data.");
-        return;
-    }
-    submitButton.disabled = true;
-    submitButton.textContent = 'Saving...';
-    hideStatusMessage();
-    const formData = {
-        date: document.getElementById('date').value,
-        invoiceNumber: document.getElementById('invoiceNumber').value,
-        prestationName: prestationSelect.value,
-        token: USER_ID_TOKEN
-    };
-    fetch(WEB_APP_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'text/plain;charset=utf-8',
-        },
-        body: JSON.stringify(formData),
-        redirect: 'follow'
+  e.preventDefault();
+
+  if (SELECTED_PRESTATIONS.length === 0) {
+    handleError("Veuillez ajouter au moins une prestation à la transaction.");
+    return;
+  }
+
+  submitButton.disabled = true;
+  submitButton.textContent = "Enregistrement...";
+  hideStatusMessage();
+
+  const formData = {
+    date: document.getElementById("date").value,
+    invoiceNumber: document.getElementById("invoiceNumber").value,
+    // Envoyer le tableau complet des prestations
+    prestations: SELECTED_PRESTATIONS,
+    token: USER_ID_TOKEN,
+  };
+
+  fetch(WEB_APP_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(formData),
+  })
+    .then((response) => response.json())
+    .then((res) => {
+      if (res.status === "success") {
+        showStatusMessage("Transaction enregistrée avec succès !", "success");
+        form.reset();
+        SELECTED_PRESTATIONS = []; // Vider la liste
+        renderSelectedList();
+        setDefaultDate();
+      } else {
+        handleError(res.message);
+      }
     })
-    .then(response => response.json())
-    .then(res => {
-        if (res.status === 'success') {
-            showStatusMessage('Transaction saved successfully!', 'success');
-            form.reset();
-            setDefaultDate();
-        } else {
-            handleError(res.message); // Show specific error from backend
-        }
-    })
-.catch(error => {
-    console.log('ERROR', error);
-    handleError('An error occurred while saving.')
-})
+    .catch((error) => handleError("Une erreur est survenue lors de l'enregistrement."))
     .finally(() => {
-        submitButton.disabled = false;
-        submitButton.textContent = 'Save Transaction';
+      submitButton.disabled = false;
+      submitButton.textContent = "Enregistrer la Transaction";
     });
 }
 
-// --- Helper Functions (Unchanged from Step 3) ---
+// --- Fonctions utilitaires (certaines inchangées) ---
 
 function fetchPrestations() {
-    fetch(WEB_APP_URL)
-        .then(response => response.json())
-        .then(res => {
-            if (res.status === 'success') {
-                populatePrestationDropdown(res.data);
-            } else {
-                handleError('Could not load services: ' + res.message);
-            }
-        })
-        .catch(error => handleError('Could not connect to the server.'));
+  fetch(WEB_APP_URL)
+    .then((response) => response.json())
+    .then((res) => {
+      if (res.status === "success") {
+        PRESTATIONS_DATA = res.data; // Stocker les données
+        populatePrestationDropdown(PRESTATIONS_DATA);
+      } else {
+        handleError("Impossible de charger les services : " + res.message);
+      }
+    })
+    .catch((error) => handleError("Impossible de se connecter au serveur."));
 }
 
 function populatePrestationDropdown(prestations) {
-    prestationSelect.innerHTML = '<option value="" disabled selected>-- Select a Service --</option>';
-    prestations.forEach(prestation => {
-        const option = document.createElement('option');
-        option.value = prestation.name;
-        option.textContent = `${prestation.name} (€${prestation.earning})`;
-        prestationSelect.appendChild(option);
-    });
+  prestationSelect.innerHTML = '<option value="" disabled selected>-- Sélectionner un Service --</option>';
+  prestations.forEach((prestation) => {
+    const option = document.createElement("option");
+    option.value = prestation.name;
+    option.textContent = `${prestation.name} (€${prestation.earning})`;
+    prestationSelect.appendChild(option);
+  });
 }
 
 function setDefaultDate() {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    document.getElementById('date').value = `${yyyy}-${mm}-${dd}`;
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  document.getElementById("date").value = `${yyyy}-${mm}-${dd}`;
 }
 
 function showStatusMessage(message, type) {
-    statusMessage.textContent = message;
-    statusMessage.className = `status-message ${type}`;
-    statusMessage.style.display = 'block';
+  statusMessage.textContent = message;
+  statusMessage.className = `status-message ${type}`;
+  statusMessage.style.display = "block";
 }
 
 function hideStatusMessage() {
-    statusMessage.style.display = 'none';
+  statusMessage.style.display = "none";
 }
 
 function handleError(message) {
-    showStatusMessage(message, 'error');
+  showStatusMessage(message, "error");
 }
 
-// Event Listener
-form.addEventListener('submit', handleFormSubmit);
+// --- Écouteurs d'événements ---
+document.addEventListener("DOMContentLoaded", renderSelectedList); // Afficher la liste vide au chargement
+addButton.addEventListener("click", addPrestationToList);
+form.addEventListener("submit", handleFormSubmit);
