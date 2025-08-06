@@ -119,7 +119,7 @@
         <input type="date" id="date" required />
 
         <label for="invoiceNumber">Numéro de Facture :</label>
-        <input type="text" id="invoiceNumber" placeholder="ex: F2024-001" required />
+        <input type="text" id="invoiceNumber" placeholder="ex: 13" required />
 
         <hr style="margin: 2em 0" />
 
@@ -129,6 +129,16 @@
         <select id="prestation">
           <option value="" disabled selected>Chargement...</option>
         </select>
+
+        <div style="margin-top: 0.5em">
+          <label for="customEarning" style="font-weight: normal; color: #666">Montant Spécifique (optionnel) :</label>
+          <input
+            type="number"
+            id="customEarning"
+            step="0.01"
+            placeholder="Laisser vide pour utiliser le prix par défaut"
+          />
+        </div>
 
         <label style="margin-top: 1em">2. Sélectionner le Mode de Règlement :</label>
         <div id="payment-options" style="display: flex; justify-content: space-around; margin-bottom: 1em">

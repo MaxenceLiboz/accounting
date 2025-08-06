@@ -1,6 +1,6 @@
 // Configuration
 const WEB_APP_URL =
-  "https://script.google.com/macros/s/AKfycbwn880As5Q_ACcfk1Qu7T_OOoqXipCzhb4TCsZwP0yRF-WBcqUAH7Fb-rYPMd8q-xVLxw/exec";
+  "https://script.google.com/macros/s/AKfycbxufeg80IJ2ihLKaClVayElTZQzMEDVblGs_50VA6b7upLbqOI6tZEwPpF8bPAnmJd2Qg/exec";
 let USER_ID_TOKEN = null; // Global variable to store the user's login token
 let PRESTATIONS_DATA = []; // Pour stocker les données des prestations
 let SELECTED_PRESTATIONS = []; // Pour stocker la liste des prestations choisies
@@ -13,6 +13,7 @@ const addButton = document.getElementById("addButton");
 const prestationListDiv = document.getElementById("prestationList");
 const submitButton = document.getElementById("submitButton");
 const statusMessage = document.getElementById("statusMessage");
+const customEarningInput = document.getElementById("customEarning");
 
 // --- Logique d'Authentification (inchangée) ---
 function handleCredentialResponse(response) {
@@ -22,6 +23,7 @@ function handleCredentialResponse(response) {
   fetchPrestations();
   setDefaultDate();
 }
+
 
 /**
  * Ajoute la prestation sélectionnée dans la liste déroulante à notre liste temporaire.
@@ -34,7 +36,6 @@ function addPrestationToList() {
   }
   const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
   if (!paymentMethod) {
-    // Juste au cas où
     handleError("Veuillez sélectionner un mode de règlement.");
     return;
   }
@@ -42,15 +43,19 @@ function addPrestationToList() {
   const prestationData = PRESTATIONS_DATA.find((p) => p.name === selectedName);
 
   if (prestationData) {
-    // Ajouter un nouvel objet à la liste, incluant le mode de paiement
+    const customEarningValue = customEarningInput.value;
+
     SELECTED_PRESTATIONS.push({
-      ...prestationData, // Copie les clés : name, earning, cost
-      paymentMethod: paymentMethod.value, // Ajoute la nouvelle clé
+      ...prestationData,                    // Copies keys: name, earning, cost
+      paymentMethod: paymentMethod.value,   // Adds the payment method
+      actualEarning: customEarningValue
     });
+    
     renderSelectedList();
   }
 
   prestationSelect.selectedIndex = 0;
+  customEarningInput.value = ""; // Clear the custom earning field
 }
 /**
  * Affiche la liste des prestations sélectionnées dans la div.
@@ -64,37 +69,47 @@ function renderSelectedList() {
   }
 
   SELECTED_PRESTATIONS.forEach((prestation, index) => {
+    const displayEarning = parseFloat(prestation.actualEarning) || parseFloat(prestation.earning);
+
+    // Check if a custom price was used to show a visual indicator
+    const isCustomPrice =
+      !!prestation.actualEarning && parseFloat(prestation.actualEarning) !== parseFloat(prestation.earning);
+    const priceText = isCustomPrice
+      ? `Montant : €${displayEarning.toFixed(2)} <em style="color:#0056b3;">(Prix de base: €${prestation.earning})</em>`
+      : `Montant : €${displayEarning.toFixed(2)}`;
+
     const itemDiv = document.createElement("div");
-    // --- NOUVEAU DESIGN AMÉLIORÉ ---
     itemDiv.style.cssText = `
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.8em;
-            margin-bottom: 0.5em;
-            background-color: #f9f9f9;
-            border-left: 5px solid #007bff;
-            border-radius: 4px;
-        `;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.8em;
+        margin-bottom: 0.5em;
+        background-color: #f9f9f9;
+        border-left: 5px solid ${isCustomPrice ? "#ffc107" : "#007bff"}; /* Yellow for custom, blue for default */
+        border-radius: 4px;
+    `;
 
     const detailsSpan = document.createElement("span");
     detailsSpan.innerHTML = `
-            <strong style="display: block; color: #333;">${prestation.name}</strong>
-            <small style="color: #666;">Payé par : ${prestation.paymentMethod} - Montant : €${prestation.earning}</small>
-        `;
+        <strong style="display: block; color: #333;">${prestation.name}</strong>
+        <small style="color: #666;">Payé par : ${prestation.paymentMethod} - ${priceText}</small>
+    `;
 
+    // Note: Your remove button logic had a small typo (`.remove-btn` instead of `[data-index]`).
+    // I'm providing a corrected and simplified version of the rendering and event handling.
     const removeButton = document.createElement("button");
     removeButton.type = "button";
     removeButton.innerHTML = "×";
-    removeButton.dataset.index = index;
+    removeButton.dataset.index = index; // Use data-index to know which item to remove
     removeButton.style.cssText = `
-            color: red;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.5em;
-            line-height: 1;
-        `;
+        color: red; background: none; border: none; cursor: pointer;
+        font-size: 1.5em; line-height: 1; padding-left: 1em;
+    `;
+    removeButton.addEventListener("click", () => {
+      SELECTED_PRESTATIONS.splice(index, 1);
+      renderSelectedList(); // Re-render the list after removing an item
+    });
 
     itemDiv.appendChild(detailsSpan);
     itemDiv.appendChild(removeButton);
