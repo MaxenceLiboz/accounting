@@ -1,0 +1,135 @@
+/* style.css */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  background-color: #f4f4f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 1em;
+  box-sizing: border-box;
+}
+.container {
+  background: white;
+  padding: 2em;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+  box-sizing: border-box;
+}
+h1 {
+  text-align: center;
+  color: #333;
+  margin-top: 0;
+}
+label {
+  display: block;
+  margin-bottom: 0.5em;
+  color: #555;
+  font-weight: bold;
+}
+input,
+select,
+button {
+  width: 100%;
+  padding: 0.8em;
+  margin-bottom: 1em;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  box-sizing: border-box;
+}
+button {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+button:disabled {
+  background-color: #aaa;
+}
+.status-message {
+  text-align: center;
+  padding: 1em;
+  margin-top: 1em;
+  border-radius: 4px;
+  display: none;
+}
+.status-message.success {
+  background-color: #d4edda;
+  color: #155724;
+}
+.status-message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+#auth-container {
+  text-align: center;
+  margin-bottom: 2em;
+}
+
+#accountingForm {
+  display: block; 
+}
+
+/* New styles for navigation and stats */
+.nav {
+  display: flex;
+  justify-content: center;
+  gap: 1em;
+  margin-bottom: 2em;
+}
+.nav-link {
+  flex-grow: 1;
+  padding: 0.8em;
+  text-align: center;
+  text-decoration: none;
+  background-color: #6c757d;
+  color: white;
+  border-radius: 4px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+.nav-link:hover {
+  background-color: #5a6268;
+}
+.nav-link.active {
+  background-color: #007bff;
+}
+.filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 1em;
+  align-items: center;
+  margin-bottom: 1.5em;
+}
+.filters label {
+  margin-bottom: 0;
+}
+.filters input {
+  margin-bottom: 0;
+}
+.filters button {
+  margin-bottom: 0;
+  height: 100%;
+}
+#statsResult table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1em;
+}
+#statsResult th, #statsResult td {
+  border: 1px solid #ddd;
+  padding: 0.8em;
+  text-align: left;
+}
+#statsResult th {
+  background-color: #f2f2f2;
+}

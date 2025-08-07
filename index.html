@@ -4,102 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Add New Transaction</title>
+    <!-- Link to the external CSS file -->
+    <link rel="stylesheet" href="style.css" />
     <!-- Google Sign-In Library -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <style>
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background-color: #f4f4f9;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        margin: 0;
-        padding: 1em;
-        box-sizing: border-box;
-      }
-      .container {
-        background: white;
-        padding: 2em;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        width: 100%;
-        max-width: 500px;
-        box-sizing: border-box;
-      }
-      h1 {
-        text-align: center;
-        color: #333;
-        margin-top: 0;
-      }
-      label {
-        display: block;
-        margin-bottom: 0.5em;
-        color: #555;
-        font-weight: bold;
-      }
-      input,
-      select,
-      button {
-        width: 100%;
-        padding: 0.8em;
-        margin-bottom: 1em;
-        border-radius: 4px;
-        border: 1px solid #ddd;
-        box-sizing: border-box;
-      }
-      button {
-        background-color: #007bff;
-        color: white;
-        font-weight: bold;
-        border: none;
-        cursor: pointer;
-        transition: background-color 0.2s;
-      }
-      button:hover:not(:disabled) {
-        background-color: #0056b3;
-      }
-      button:disabled {
-        background-color: #aaa;
-      }
-      .status-message {
-        text-align: center;
-        padding: 1em;
-        margin-top: 1em;
-        border-radius: 4px;
-        display: none;
-      }
-      .status-message.success {
-        background-color: #d4edda;
-        color: #155724;
-      }
-      .status-message.error {
-        background-color: #f8d7da;
-        color: #721c24;
-      }
-      #auth-container {
-        text-align: center;
-        margin-bottom: 2em;
-      }
-      #accountingForm {
-        display: none;
-      } /* Form is hidden by default */
-    </style>
+    <script src="auth.js"></script> 
   </head>
   <body>
     <div class="container">
       <div id="auth-container">
         <h1>Welcome</h1>
         <p>Please sign in to continue.</p>
-        <!-- This div configures the sign-in -->
-        <script src="https://accounts.google.com/gsi/client" async></script>
         <div
           id="g_id_onload"
           data-client_id="810843016574-n9008tnnmhrn38j7e8v55b9c90s3qn4l.apps.googleusercontent.com"
           data-callback="handleCredentialResponse"
           data-auto_prompt="false"
         ></div>
-        <!-- data-login_uri="https://your.domain/your_login_endpoint" -->
         <div
           class="g_id_signin"
           data-type="standard"
@@ -111,59 +32,108 @@
         ></div>
       </div>
 
-      <form id="accountingForm">
-        <h1>Nouvelle Transaction</h1>
-
-        <!-- Section pour les informations générales -->
-        <label for="date">Date :</label>
-        <input type="date" id="date" required />
-
-        <label for="invoiceNumber">Numéro de Facture :</label>
-        <input type="text" id="invoiceNumber" placeholder="ex: 13" required />
-
-        <hr style="margin: 2em 0" />
-
-        <!-- Section pour AJOUTER des prestations -->
-        <h3>Ajouter une prestation</h3>
-        <label for="prestation">1. Sélectionner une Prestation :</label>
-        <select id="prestation">
-          <option value="" disabled selected>Chargement...</option>
-        </select>
-
-        <div style="margin-top: 0.5em">
-          <label for="customEarning" style="font-weight: normal; color: #666">Montant Spécifique (optionnel) :</label>
-          <input
-            type="number"
-            id="customEarning"
-            step="0.01"
-            placeholder="Laisser vide pour utiliser le prix par défaut"
-          />
+      <!-- App content now includes navigation -->
+      <div id="app-content" style="display: none">
+        <div class="nav">
+            <a href="index.html" class="nav-link active">Nouvelle Transaction</a>
+            <a href="stats.html" class="nav-link">Statistiques</a>
+            <a href="#" onclick="logout()" class="nav-link logout">Déconnexion</a>
         </div>
+        <form id="accountingForm">
+          <h1>Nouvelle Transaction</h1>
 
-        <label style="margin-top: 1em">2. Sélectionner le Mode de Règlement :</label>
-        <div id="payment-options" style="display: flex; justify-content: space-around; margin-bottom: 1em">
-          <label><input type="radio" name="paymentMethod" value="Espèce" checked /> Espèce</label>
-          <label><input type="radio" name="paymentMethod" value="Chèque" /> Chèque</label>
-          <label><input type="radio" name="paymentMethod" value="Paylib" /> Paylib</label>
-        </div>
+          <!-- Section pour les informations générales -->
+          <label for="date">Date :</label>
+          <input type="date" id="date" required />
 
-        <button type="button" id="addButton" style="width: 100%; padding: 0.8em 1.2em; margin-bottom: 1.5em">
-          Ajouter à la transaction
-        </button>
+          <label for="invoiceNumber">Numéro de Facture :</label>
+          <input type="text" id="invoiceNumber" placeholder="ex: 13" required />
 
-        <hr style="margin: 2em 0" />
+          <hr style="margin: 2em 0" />
 
-        <!-- Zone où la liste des prestations ajoutées s'affichera -->
-        <h3>Transaction Actuelle</h3>
-        <div
-          id="prestationList"
-          style="border: 1px solid #eee; padding: 0.5em 1em; border-radius: 4px; min-height: 50px; margin-bottom: 1em"
-        >
-          <!-- La liste sera générée par JavaScript ici -->
-        </div>
+          <!-- Section pour AJOUTER des prestations -->
+          <h3>Ajouter une prestation</h3>
+          <label for="prestation">1. Sélectionner une Prestation :</label>
+          <select id="prestation">
+            <option value="" disabled selected>Chargement...</option>
+          </select>
 
-        <button type="submit" id="submitButton">Enregistrer la Transaction Complète</button>
-      </form>
+          <div style="margin-top: 0.5em">
+            <label for="customEarning" style="font-weight: normal; color: #666"
+              >Montant Spécifique (optionnel) :</label
+            >
+            <input
+              type="number"
+              id="customEarning"
+              step="0.01"
+              placeholder="Laisser vide pour utiliser le prix par défaut"
+            />
+          </div>
+
+          <label style="margin-top: 1em"
+            >2. Sélectionner le Mode de Règlement :</label
+          >
+          <div
+            id="payment-options"
+            style="
+              display: flex;
+              justify-content: space-around;
+              margin-bottom: 1em;
+            "
+          >
+            <label
+              ><input
+                type="radio"
+                name="paymentMethod"
+                value="Espèce"
+                checked
+              />
+              Espèce</label
+            >
+            <label
+              ><input type="radio" name="paymentMethod" value="Chèque" />
+              Chèque</label
+            >
+            <label
+              ><input type="radio" name="paymentMethod" value="Paylib" />
+              Paylib</label
+            >
+          </div>
+
+          <button
+            type="button"
+            id="addButton"
+            style="
+              width: 100%;
+              padding: 0.8em 1.2em;
+              margin-bottom: 1.5em;
+            "
+          >
+            Ajouter à la transaction
+          </button>
+
+          <hr style="margin: 2em 0" />
+
+          <!-- Zone où la liste des prestations ajoutées s'affichera -->
+          <h3>Transaction Actuelle</h3>
+          <div
+            id="prestationList"
+            style="
+              border: 1px solid #eee;
+              padding: 0.5em 1em;
+              border-radius: 4px;
+              min-height: 50px;
+              margin-bottom: 1em;
+            "
+          >
+            <!-- La liste sera générée par JavaScript ici -->
+          </div>
+
+          <button type="submit" id="submitButton">
+            Enregistrer la Transaction Complète
+          </button>
+        </form>
+      </div>
       <div id="statusMessage" class="status-message"></div>
     </div>
     <script src="app.js"></script>

@@ -1,29 +1,33 @@
 // Configuration
 const WEB_APP_URL =
-  "https://script.google.com/macros/s/AKfycbwg6IAtc0V_RxAViTfUtD722MxZaz9dSLpp2G3JbiwtX_mMNizwdAUHQG7dY5_sRDynmg/exec";
-let USER_ID_TOKEN = null; // Global variable to store the user's login token
+  "https://script.google.com/macros/s/AKfycbxsMiZ79MzLfXcZtUzrfOcbqcqvi5dtRppV5Fp-OO-jQFsv1CWGLMuFKqzyyLfLXN9pIQ/exec";
+let idToken = null; // Global variable to store the user's login token
 let PRESTATIONS_DATA = []; // Pour stocker les données des prestations
 let SELECTED_PRESTATIONS = []; // Pour stocker la liste des prestations choisies
 
-// Sélecteurs d'éléments
-const authContainer = document.getElementById("auth-container");
-const form = document.getElementById("accountingForm");
+/// DOM references (remove authContainer and appContent, they are handled by auth.js)
+const accountingForm = document.getElementById("accountingForm");
+const statusMessage = document.getElementById("statusMessage");
 const prestationSelect = document.getElementById("prestation");
 const addButton = document.getElementById("addButton");
 const prestationListDiv = document.getElementById("prestationList");
-const submitButton = document.getElementById("submitButton");
-const statusMessage = document.getElementById("statusMessage");
-const customEarningInput = document.getElementById("customEarning");
+const dateInput = document.getElementById("date");
 
-// --- Logique d'Authentification (inchangée) ---
-function handleCredentialResponse(response) {
-  USER_ID_TOKEN = response.credential;
-  authContainer.style.display = "none";
-  form.style.display = "block";
-  fetchPrestations();
-  setDefaultDate();
+let currentTransaction = [];
+
+// This function will run ONLY if the user is logged in
+function initializePage() {
+    idToken = sessionStorage.getItem("googleIdToken"); // Get token from storage
+    fetchPrestations();
+    dateInput.value = new Date().toISOString().slice(0, 10);
 }
 
+window.onload = function() {
+  // Check login status. If logged in, initialize the page.
+  if (checkLoginStatus()) {
+    initializePage();
+  }
+};
 
 /**
  * Ajoute la prestation sélectionnée dans la liste déroulante à notre liste temporaire.
@@ -145,7 +149,7 @@ function handleFormSubmit(e) {
     invoiceNumber: document.getElementById("invoiceNumber").value,
     // Envoyer le tableau complet des prestations
     prestations: SELECTED_PRESTATIONS,
-    token: USER_ID_TOKEN,
+    token: idToken,
   };
 
   fetch(WEB_APP_URL, {
@@ -175,7 +179,7 @@ function handleFormSubmit(e) {
 // --- Fonctions utilitaires (certaines inchangées) ---
 
 function fetchPrestations() {
-  fetch(WEB_APP_URL + "?token=" + USER_ID_TOKEN)
+  fetch(WEB_APP_URL + "?token=" + idToken)
     .then((response) => response.json())
     .then((res) => {
       if (res.status === "success") {
@@ -223,4 +227,4 @@ function handleError(message) {
 // --- Écouteurs d'événements ---
 document.addEventListener("DOMContentLoaded", renderSelectedList); // Afficher la liste vide au chargement
 addButton.addEventListener("click", addPrestationToList);
-form.addEventListener("submit", handleFormSubmit);
+accountingForm.addEventListener("submit", handleFormSubmit);
