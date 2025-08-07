@@ -1,6 +1,6 @@
 // Configuration
 const WEB_APP_URL =
-  "https://script.google.com/macros/s/AKfycbxufeg80IJ2ihLKaClVayElTZQzMEDVblGs_50VA6b7upLbqOI6tZEwPpF8bPAnmJd2Qg/exec";
+  "https://script.google.com/macros/s/AKfycbwg6IAtc0V_RxAViTfUtD722MxZaz9dSLpp2G3JbiwtX_mMNizwdAUHQG7dY5_sRDynmg/exec";
 let USER_ID_TOKEN = null; // Global variable to store the user's login token
 let PRESTATIONS_DATA = []; // Pour stocker les données des prestations
 let SELECTED_PRESTATIONS = []; // Pour stocker la liste des prestations choisies
@@ -175,7 +175,7 @@ function handleFormSubmit(e) {
 // --- Fonctions utilitaires (certaines inchangées) ---
 
 function fetchPrestations() {
-  fetch(WEB_APP_URL)
+  fetch(WEB_APP_URL + "?token=" + USER_ID_TOKEN)
     .then((response) => response.json())
     .then((res) => {
       if (res.status === "success") {
